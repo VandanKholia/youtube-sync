@@ -5,10 +5,25 @@ import PlusIcon from "./icons/PlusIcon";
 import UsersIcon from "./icons/UserIcon";
 import ArrowRightIcon from "./icons/ArrowIcon";
 
+function UserIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+    </svg>
+  );
+}
+
 export default function HomePage() {
-  const [roomIdInput, setRoomIdInput] = useState("");
-  const [createdRoomId, setCreatedRoomId] = useState<string | null>(null);
+  // Create room state
+  const [createUsername, setCreateUsername] = useState("");
+  const [createdRoomId, setCreatedRoomId] = useState("");
   const [copied, setCopied] = useState(false);
+  const [createError, setCreateError] = useState("");
+
+  // Join room state
+  const [joinUsername, setJoinUsername] = useState("");
+  const [roomIdInput, setRoomIdInput] = useState("");
   const [joinError, setJoinError] = useState("");
 
   const generateRoomId = () => {
@@ -22,9 +37,22 @@ export default function HomePage() {
   };
 
   const handleCreateRoom = () => {
+    if (!createUsername.trim()) {
+      setCreateError("Please enter a username.");
+      return;
+    }
+    setCreateError("");
     const newId = generateRoomId();
     setCreatedRoomId(newId);
     setCopied(false);
+  };
+
+  const handleEnterRoom = () => {
+    if (!createUsername.trim()) {
+      setCreateError("Please enter a username.");
+      return;
+    }
+    alert(`Entering room ${createdRoomId} as ${createUsername.trim()}`);
   };
 
   const handleCopy = () => {
@@ -36,12 +64,16 @@ export default function HomePage() {
   };
 
   const handleJoin = () => {
+    if (!joinUsername.trim()) {
+      setJoinError("Please enter a username.");
+      return;
+    }
     if (!roomIdInput.trim()) {
       setJoinError("Please enter a Room ID.");
       return;
     }
     setJoinError("");
-    alert(`Joining room: ${roomIdInput.trim()}`);
+    alert(`Joining room: ${roomIdInput.trim()} as ${joinUsername.trim()}`);
   };
 
   return (
@@ -127,40 +159,68 @@ export default function HomePage() {
             </div>
 
             <h2 className="text-xl font-semibold mb-1.5">Create a Room</h2>
-            <p className="text-white/40 text-sm mb-7 leading-relaxed">
+            <p className="text-white/40 text-sm mb-6 leading-relaxed">
               Start a new session. Share the room ID with friends to watch together.
             </p>
 
-            {!createdRoomId ? (
-              <button
-                onClick={handleCreateRoom}
-                className="w-full py-3 px-5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98] shadow-lg shadow-red-900/30 mt-auto"
-              >
-                <PlusIcon />
-                Generate Room ID
-              </button>
-            ) : (
-              <div className="mt-auto space-y-3">
-                <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                  <span className="flex-1 font-mono text-sm text-white/80 tracking-widest">
-                    {createdRoomId}
+            <div className="mt-auto space-y-3">
+              {/* Username input */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold tracking-widest uppercase text-white/30 pl-1">
+                  Your Username
+                </label>
+                <div className="flex items-center gap-2 bg-black/40 border border-white/[0.07] focus-within:border-white/15 rounded-xl px-4 py-3 transition-colors">
+                  <span className="text-white/30">
+                    <UserIcon />
                   </span>
-                  <button
-                    onClick={handleCopy}
-                    className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/[0.07] hover:bg-white/[0.12] transition-colors text-white/60 hover:text-white"
-                  >
-                    {copied ? "Copied!" : "Copy"}
-                  </button>
+                  <input
+                    type="text"
+                    value={createUsername}
+                    onChange={(e) => {
+                      setCreateUsername(e.target.value);
+                      setCreateError("");
+                    }}
+                    placeholder="e.g. Alex"
+                    maxLength={24}
+                    className="flex-1 bg-transparent outline-none text-sm text-white/80 placeholder:text-white/20"
+                  />
                 </div>
+                {createError && (
+                  <p className="text-xs text-red-400 pl-1">{createError}</p>
+                )}
+              </div>
+
+              {!createdRoomId ? (
                 <button
                   onClick={handleCreateRoom}
                   className="w-full py-3 px-5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98] shadow-lg shadow-red-900/30"
                 >
-                  Enter Room
-                  <ArrowRightIcon />
+                  <PlusIcon />
+                  Generate Room ID
                 </button>
-              </div>
-            )}
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                    <span className="flex-1 font-mono text-sm text-white/80 tracking-widest">
+                      {createdRoomId}
+                    </span>
+                    <button
+                      onClick={handleCopy}
+                      className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/[0.07] hover:bg-white/[0.12] transition-colors text-white/60 hover:text-white"
+                    >
+                      {copied ? "Copied!" : "Copy"}
+                    </button>
+                  </div>
+                  <button
+                    onClick={handleEnterRoom}
+                    className="w-full py-3 px-5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98] shadow-lg shadow-red-900/30"
+                  >
+                    Enter Room
+                    <ArrowRightIcon />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Join Room Card */}
@@ -179,14 +239,43 @@ export default function HomePage() {
             </div>
 
             <h2 className="text-xl font-semibold mb-1.5">Join a Room</h2>
-            <p className="text-white/40 text-sm mb-7 leading-relaxed">
+            <p className="text-white/40 text-sm mb-6 leading-relaxed">
               Enter a room ID shared with you to join an existing session instantly.
             </p>
 
             <div className="mt-auto space-y-3">
-              <div className="space-y-1.5">
+              {/* Username input */}
+              <div>
+                <label className="text-[11px] font-semibold tracking-widest uppercase text-white/30 pl-1 block mb-1.5">
+                  Your Username
+                </label>
                 <div className="flex items-center gap-2 bg-black/40 border border-white/[0.07] focus-within:border-white/15 rounded-xl px-4 py-3 transition-colors">
-                  <LinkIcon />
+                  <span className="text-white/30">
+                    <UserIcon />
+                  </span>
+                  <input
+                    type="text"
+                    value={joinUsername}
+                    onChange={(e) => {
+                      setJoinUsername(e.target.value);
+                      setJoinError("");
+                    }}
+                    placeholder="e.g. Alex"
+                    maxLength={24}
+                    className="flex-1 bg-transparent outline-none text-sm text-white/80 placeholder:text-white/20"
+                  />
+                </div>
+              </div>
+
+              {/* Room ID input */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold tracking-widest uppercase text-white/30 pl-1 block">
+                  Room ID
+                </label>
+                <div className="flex items-center gap-2 bg-black/40 border border-white/[0.07] focus-within:border-white/15 rounded-xl px-4 py-3 transition-colors">
+                  <span className="text-white/30">
+                    <LinkIcon />
+                  </span>
                   <input
                     type="text"
                     value={roomIdInput}
@@ -203,6 +292,7 @@ export default function HomePage() {
                   <p className="text-xs text-red-400 pl-1">{joinError}</p>
                 )}
               </div>
+
               <button
                 onClick={handleJoin}
                 className="w-full py-3 px-5 rounded-xl bg-white/[0.07] hover:bg-white/[0.1] border border-white/[0.08] hover:border-white/15 text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98]"
