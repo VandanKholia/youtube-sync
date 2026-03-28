@@ -4,17 +4,11 @@ import PlayIcon from "./icons/PlayIcon";
 import PlusIcon from "./icons/PlusIcon";
 import UsersIcon from "./icons/UserIcon";
 import ArrowRightIcon from "./icons/ArrowIcon";
-
-function UserIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="8" r="4" />
-      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-    </svg>
-  );
-}
+import { useNavigate } from "react-router-dom";
+import UserIcon from "./icons/UserIcon";
 
 export default function HomePage() {
+  const navigate = useNavigate();
   // Create room state
   const [createUsername, setCreateUsername] = useState("");
   const [createdRoomId, setCreatedRoomId] = useState("");
@@ -52,6 +46,8 @@ export default function HomePage() {
       setCreateError("Please enter a username.");
       return;
     }
+    localStorage.setItem("username", createUsername.trim());
+    navigate(`/room/${createdRoomId}`);
     alert(`Entering room ${createdRoomId} as ${createUsername.trim()}`);
   };
 
@@ -73,6 +69,7 @@ export default function HomePage() {
       return;
     }
     setJoinError("");
+    navigate(`/room/${roomIdInput.trim()}`);
     alert(`Joining room: ${roomIdInput.trim()} as ${joinUsername.trim()}`);
   };
 
