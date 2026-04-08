@@ -54,8 +54,9 @@ export const registerSocketHandlers = (io: Server) => {
                 isPlaying: false,
             });
 
-            socket.to(roomId).emit("change-video", videoId);
+            io.to(roomId).emit("change-video", videoId);
         });
+
 
         socket.on("disconnect", () => {
             console.log("User disconnected:", socket.id);

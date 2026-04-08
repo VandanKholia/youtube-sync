@@ -6,18 +6,38 @@ import YouTube from 'react-youtube';
 function RoomPage() {
   const roomId = useParams().roomId;
   const username = localStorage.getItem("username");
-  const [videoId, setVideoId] = useState("dQw4w9WgXcQ");
+  const [videoId, setVideoId] = useState("");
+  const [urlInput, setUrlInput] = useState("");
 
   useEffect(() => {
     socket.connect();
-    socket.emit('join-room',roomId);
-  })
+    socket.emit('join-room', roomId);
+    socket.on('change-video', (newVideoId)=> {
+      console.log("video changes");
+      setVideoId(newVideoId);
+    })
+  }, []);
+
+  const extractYouTubeId = (url: string) => {
+    const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[7].length === 11) ? match[7] : null;
+  };
+
+  const handleUrlSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const id = extractYouTubeId(urlInput);
+    if(id) {
+      setVideoId(id);
+      socket.emit('change-video', {roomId, videoId: id});
+    }
+  }
   return (
     <div className="min-h-screen bg-[#050505] text-white flex flex-col p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-bold">Room: <span className="text-red-500">{roomId}</span></h1>
-        <button  className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm transition-all">
+        <button className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm transition-all">
           Leave Room
         </button>
       </div>
@@ -35,12 +55,12 @@ function RoomPage() {
               className="w-full h-full"
             />
           </div>
-          
+
           {/* URL Input */}
-          <form  className="flex gap-2">
-            <input 
-              // value={urlInput}
-              // onChange={(e) => setUrlInput(e.target.value)}
+          <form onSubmit={handleUrlSubmit}className="flex gap-2">
+            <input
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
               placeholder="Paste YouTube Link here..."
               className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-red-500/50 transition-colors"
             />
