@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom';
 import { socket } from '../socket/socket';
 import YouTube from 'react-youtube';
@@ -8,15 +8,26 @@ function RoomPage() {
   const username = localStorage.getItem("username");
   const [videoId, setVideoId] = useState("");
   const [urlInput, setUrlInput] = useState("");
-
+  const playerRef = useRef(null);
   useEffect(() => {
     socket.connect();
     socket.emit('join-room', roomId);
+
+    socket.on('sync-video-state', ({videoId, currentTime, isPlaying})=>{
+      setVideoId(videoId);
+    })
     socket.on('change-video', (newVideoId)=> {
       console.log("video changes");
       setVideoId(newVideoId);
     })
-  }, []);
+
+
+    return () => {
+    // socket.off('change-video',);
+    socket.off('play-video');
+    socket.off('pause-video');
+  };
+  }, [roomId]);
 
   const extractYouTubeId = (url: string) => {
     const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
@@ -49,9 +60,9 @@ function RoomPage() {
             <YouTube
               videoId={videoId}
               opts={{ width: '100%', height: '100%', playerVars: { autoplay: 1 } }}
-              // onReady={(e) => playerRef.current = e.target}
-              // onPlay={() => socket.emit("play", roomId)}
-              // onPause={(e) => socket.emit("pause", { roomId, currentTime: e.target.getCurrentTime() })}
+              onReady={(e) => playerRef.current = e.target}
+              onPlay={() => socket.emit("play", roomId)}
+              onPause={(e) => socket.emit("pause", { roomId, currentTime: e.target.getCurrentTime() })}
               className="w-full h-full"
             />
           </div>

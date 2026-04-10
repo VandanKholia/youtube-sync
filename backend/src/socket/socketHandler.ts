@@ -15,6 +15,11 @@ export const registerSocketHandlers = (io: Server) => {
         //join room
         socket.on('join-room', (roomId: string) => {
             socket.join(roomId);
+            const currentRoom = rooms.get(roomId);
+            if(currentRoom) {
+                const state = rooms.get(roomId);
+                socket.emit("sync-video-state", state);
+            }
             console.log(`${socket.id} joined room ${roomId}`);
         });
 
