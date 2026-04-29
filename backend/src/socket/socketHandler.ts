@@ -23,32 +23,34 @@ export const registerSocketHandlers = (io: Server) => {
             console.log(`${socket.id} joined room ${roomId}`);
         });
 
-        socket.on('play', (roomId: string) => {
+        socket.on('play-video', ({ roomId, currentTime }) => {
             const room = rooms.get(roomId);
 
             if (room) {
                 room.isPlaying = true;
+                room.currentTime = currentTime;
             }
-            socket.to(roomId).emit("play");
+            socket.to(roomId).emit("play-video", { currentTime });
         });
         //pause
-        socket.on('pause', ({ roomId, currentTime }) => {
+        socket.on('pause-video', ({ roomId, currentTime }) => {
+            console.log("video paused at", currentTime);
             const room = rooms.get(roomId);
 
             if (room) {
                 room.isPlaying = false;
                 room.currentTime = currentTime
             }
-            socket.to(roomId).emit("pause", currentTime);
+            socket.to(roomId).emit("pause-video", currentTime);
         });
         // Seek
-        socket.on("seek", ({ roomId, time }) => {
+        socket.on("seek-video", ({ roomId, time }) => {
             const room = rooms.get(roomId);
             if (room) {
                 room.currentTime = time;
             }
 
-            socket.to(roomId).emit("seek", time);
+            socket.to(roomId).emit("seek-video", time);
         });
 
         // Change Video

@@ -8,25 +8,57 @@ function RoomPage() {
   const username = localStorage.getItem("username");
   const [videoId, setVideoId] = useState("");
   const [urlInput, setUrlInput] = useState("");
-  const playerRef = useRef(null);
+  const playerRef = useRef<any>(null);
+  const isSyncingRef = useRef(false);
+
   useEffect(() => {
     socket.connect();
     socket.emit('join-room', roomId);
 
-    socket.on('sync-video-state', ({videoId, currentTime, isPlaying})=>{
+    socket.on('sync-video-state', ({ videoId, currentTime, isPlaying }) => {
       setVideoId(videoId);
-    })
-    socket.on('change-video', (newVideoId)=> {
+
+      const trySeek = setInterval(() => {
+        if (playerRef.current) {
+          isSyncingRef.current = true;
+          playerRef.current.seekTo(currentTime, true);
+          isPlaying ? playerRef.current.playVideo() : playerRef.current.pauseVideo();
+          isSyncingRef.current = false;
+          clearInterval(trySeek);
+        }
+      }, 200);
+    });
+
+    socket.on('change-video', (newVideoId) => {
       console.log("video changes");
       setVideoId(newVideoId);
     })
 
+    socket.on('play-video', ({ currentTime }) => {
+      if (playerRef.current) {
+        isSyncingRef.current = true;
+        playerRef.current.seekTo(currentTime, true);
+        playerRef.current.playVideo();
+        isSyncingRef.current = false;
+      }
+    })
+
+    socket.on('pause-video', ({ currentTime }) => {
+      if (playerRef.current) {
+        isSyncingRef.current = true;
+        playerRef.current.seekTo(currentTime, true);
+        playerRef.current.pauseVideo();
+        isSyncingRef.current = false;
+      }
+
+    })
 
     return () => {
-    // socket.off('change-video',);
-    socket.off('play-video');
-    socket.off('pause-video');
-  };
+      socket.off('sync-video-state');
+      socket.off('change-video');
+      socket.off('play-video');
+      socket.off('pause-video');
+    };
   }, [roomId]);
 
   const extractYouTubeId = (url: string) => {
@@ -38,11 +70,13 @@ function RoomPage() {
   const handleUrlSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const id = extractYouTubeId(urlInput);
-    if(id) {
+    if (id) {
       setVideoId(id);
-      socket.emit('change-video', {roomId, videoId: id});
+      socket.emit('change-video', { roomId, videoId: id });
     }
   }
+
+
   return (
     <div className="min-h-screen bg-[#050505] text-white flex flex-col p-6">
       {/* Header */}
@@ -61,14 +95,14 @@ function RoomPage() {
               videoId={videoId}
               opts={{ width: '100%', height: '100%', playerVars: { autoplay: 1 } }}
               onReady={(e) => playerRef.current = e.target}
-              onPlay={() => socket.emit("play", roomId)}
-              onPause={(e) => socket.emit("pause", { roomId, currentTime: e.target.getCurrentTime() })}
+              onPlay={() => socket.emit("play-video", { roomId, currentTime: playerRef.current.getCurrentTime() })}
+              onPause={(e) => socket.emit("pause-video", { roomId, currentTime: e.target.getCurrentTime() })}
               className="w-full h-full"
             />
           </div>
 
           {/* URL Input */}
-          <form onSubmit={handleUrlSubmit}className="flex gap-2">
+          <form onSubmit={handleUrlSubmit} className="flex gap-2">
             <input
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
