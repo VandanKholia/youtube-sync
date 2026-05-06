@@ -6,6 +6,7 @@ const rooms = new Map<
         videoId: string;
         currentTime: number;
         isPlaying: boolean;
+        lastUpdated: number;
     }
 >();
 export const registerSocketHandlers = (io: Server) => {
@@ -15,11 +16,28 @@ export const registerSocketHandlers = (io: Server) => {
         //join room
         socket.on('join-room', (roomId: string) => {
             socket.join(roomId);
-            const currentRoom = rooms.get(roomId);
-            if(currentRoom) {
-                const state = rooms.get(roomId);
-                socket.emit("sync-video-state", state);
+            let room = rooms.get(roomId);
+
+            if (!room) {
+                room = {
+                    videoId: "",
+                    currentTime: 0,
+                    isPlaying: false,
+                    lastUpdated: Date.now(),
+                };
+                rooms.set(roomId, room);
             }
+
+            const estimatedTime = room.isPlaying
+                ? room.currentTime + (Date.now() - room.lastUpdated) / 1000
+                : room.currentTime;
+
+            socket.emit("sync-video-state", {
+                videoId: room.videoId,
+                currentTime: estimatedTime,
+                isPlaying: room.isPlaying,
+            });
+
             console.log(`${socket.id} joined room ${roomId}`);
         });
 
@@ -29,6 +47,7 @@ export const registerSocketHandlers = (io: Server) => {
             if (room) {
                 room.isPlaying = true;
                 room.currentTime = currentTime;
+                room.lastUpdated = Date.now();
             }
             socket.to(roomId).emit("play-video", { currentTime });
         });
@@ -39,18 +58,20 @@ export const registerSocketHandlers = (io: Server) => {
 
             if (room) {
                 room.isPlaying = false;
-                room.currentTime = currentTime
+                room.currentTime = currentTime;
+                room.lastUpdated = Date.now();
             }
-            socket.to(roomId).emit("pause-video", currentTime);
+            socket.to(roomId).emit("pause-video", { currentTime });
         });
         // Seek
         socket.on("seek-video", ({ roomId, time }) => {
             const room = rooms.get(roomId);
             if (room) {
                 room.currentTime = time;
+                room.lastUpdated = Date.now();
             }
 
-            socket.to(roomId).emit("seek-video", time);
+            socket.to(roomId).emit("seek-video", { time });
         });
 
         // Change Video
@@ -59,9 +80,10 @@ export const registerSocketHandlers = (io: Server) => {
                 videoId,
                 currentTime: 0,
                 isPlaying: false,
+                lastUpdated: Date.now(),
             });
 
-            io.to(roomId).emit("change-video", videoId);
+            socket.to(roomId).emit("change-video", videoId);
         });
 
 
