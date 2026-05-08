@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import LinkIcon from "./icons/LinkIcon";
 import PlayIcon from "./icons/PlayIcon";
 import PlusIcon from "./icons/PlusIcon";
@@ -29,7 +29,12 @@ export default function HomePage() {
     }
     return id;
   };
-
+  useEffect(() => {
+    const storedUsername = localStorage.getItem("username");
+    if (storedUsername) {
+      localStorage.clear();
+    } 
+  }, []);
   const handleCreateRoom = () => {
     if (!createUsername.trim()) {
       setCreateError("Please enter a username.");
@@ -68,6 +73,7 @@ export default function HomePage() {
       setJoinError("Please enter a Room ID.");
       return;
     }
+    localStorage.setItem("username", joinUsername.trim());
     setJoinError("");
     navigate(`/room/${roomIdInput.trim()}`);
     alert(`Joining room: ${roomIdInput.trim()} as ${joinUsername.trim()}`);

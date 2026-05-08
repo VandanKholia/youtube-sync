@@ -1,3 +1,4 @@
+import { time } from "console";
 import { Server, Socket } from "socket.io";
 
 const rooms = new Map<
@@ -86,7 +87,13 @@ export const registerSocketHandlers = (io: Server) => {
             socket.to(roomId).emit("change-video", videoId);
         });
 
-
+        socket.on("send-message", ({roomId, username, text}) => {
+            socket.to(roomId).emit("receive-message", {
+                username,
+                text,
+                timestamp: Date.now(),
+            });
+        })
         socket.on("disconnect", () => {
             console.log("User disconnected:", socket.id);
         });

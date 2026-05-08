@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { socket } from '../socket/socket';
 import YouTube from 'react-youtube';
+import ChatBox from './ChatBox';
 
 function RoomPage() {
   const roomId = useParams().roomId;
@@ -13,8 +14,12 @@ function RoomPage() {
   const playerRef = useRef<any>(null);
   const isSyncingRef = useRef(false);
   const pendingSyncRef = useRef<any>(null);
-  
+  const navigate = useNavigate();
+
   useEffect(() => {
+    if (!localStorage.getItem("username")) {
+      navigate("/", { replace: true });
+    }
     socket.connect();
     socket.emit('join-room', roomId);
 
@@ -52,6 +57,7 @@ function RoomPage() {
     });
 
     return () => {
+      socket.disconnect();
       socket.off('sync-video-state');
       socket.off('change-video');
       socket.off('play-video');
@@ -102,7 +108,7 @@ function RoomPage() {
     setTimeout(() => {
       isSyncingRef.current = false;
     }, 500);
-    
+
     setIsReadyToPlay(isPlaying);
     pendingSyncRef.current = null;
   };
@@ -138,7 +144,7 @@ function RoomPage() {
           </div>
 
           {/* Sync Button */}
-          {!isReadyToPlay && videoId && !isVideoChanged &&(
+          {!isReadyToPlay && videoId && !isVideoChanged && (
             <button
               onClick={handleSyncAndPlay}
               className="w-full bg-green-600 py-3 rounded-xl font-bold hover:bg-green-500 transition-all"
@@ -160,11 +166,11 @@ function RoomPage() {
           </form>
         </div>
 
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
-          <h3 className="text-sm text-white/40 mb-4">Participants</h3>
-          <div className="text-sm">
-            {localStorage.getItem("username")} (You)
-          </div>
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col h-[600px] lg:h-auto">
+          <ChatBox
+            roomId={roomId!}
+            username={localStorage.getItem("username") || "Anonymous"}
+          />
         </div>
       </div>
     </div>
