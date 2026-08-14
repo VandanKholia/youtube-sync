@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useWebRTC } from '../hooks/useWebRTC';
 import { useYouTubeSync } from '../hooks/useYoutubeSync';
-import { YouTubePlayerSection } from '../components/YoutubePlayer';
+import { YouTubePlayerSection } from './YoutubePlayerSection';
 import { VideoCallGrid } from '../components/VideoGrid';
 import ChatBox from '../components/ChatBox';
 
