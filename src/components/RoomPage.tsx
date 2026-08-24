@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useWebRTC } from '../hooks/useWebRTC';
 import { useYouTubeSync } from '../hooks/useYoutubeSync';
 import { YouTubePlayerSection } from './YoutubePlayerSection';
-import { VideoCallGrid } from '../components/VideoGrid';
+import { VideoCallGrid } from './VideoCallGrid';
 import ChatBox from '../components/ChatBox';
 
 function RoomPage() {
